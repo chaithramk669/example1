@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Movie Seat Booking</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #141e30, #243b55);
+            min-height: 100vh;
+            color: white;
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 38px;
+            margin-bottom: 10px;
+            color: #ffcc00;
+        }
+
+        .header p {
+            color: #ddd;
+        }
+
+        .card {
+            background: #ffffff;
+            color: #333;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+            background: white;
+        }
+
+        .screen {
+            background: #ddd;
+            color: #333;
+            text-align: center;
+            padding: 12px;
+            margin: 25px auto;
+            max-width: 600px;
+            border-radius: 50% 50% 0 0;
+            font-weight: bold;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .seat-area {
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        .seat-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+            min-width: 500px;
+        }
+
+        .row-label {
+            width: 25px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .seat {
+            width: 35px;
+            height: 32px;
+            background: #4caf50;
+            border-radius: 7px 7px 3px 3px;
+            cursor: pointer;
+            color: white;
+            font-size: 11px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.2s;
+        }
+
+        .seat:hover {
+            transform: scale(1.1);
+        }
+
+        .seat.booked {
+            background: #777;
+            cursor: not-allowed;
+        }
+
+        .seat.selected {
+            background: #ff9800;
+            transform: scale(1.08);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #444;
+        }
+
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+        }
+
+        .available {
+            background: #4caf50;
+        }
+
+        .selected-box {
+            background: #ff9800;
+        }
+
+        .booked-box {
+            background: #777;
+        }
+
+        .booking-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .summary-info p {
+            margin: 8px 0;
+            font-size: 16px;
+        }
+
+        .summary-info strong {
+            color: #222;
+        }
+
+        .price {
+            font-size: 28px;
+            color: #e91e63;
+            font-weight: bold;
+        }
+
+        .book-btn {
+            width: 100%;
+            background: #e91e63;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .book-btn:hover {
+            background: #c2185b;
+        }
+
+        .confirmation {
+            display: none;
+            background: #e8f5e9;
+            color: #1b5e20;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .confirmation h2 {
+            margin-bottom: 10px;
+        }
+
+        footer {
+            text-align: center;
+            color: #ccc;
+            margin-top: 25px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 650px) {
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .selection {
+                grid-template-columns: 1fr;
+            }
+
+            .booking-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .seat {
+                width: 30px;
+                height: 28px;
+            }
+
+            .seat-row {
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <h1>🎬 Movie Seat Booking</h1>
+        <p>Select your movie, showtime and preferred seats</p>
+    </div>
+
+
+    <!-- Movie Selection -->
+    <div class="card">
+
+        <div class="selection">
+
+            <div class="form-group">
+                <label for="movie">Select Movie</label>
+
+                <select id="movie" onchange="updatePrice()">
+                    <option value="200">Avengers: Endgame - ₹200</option>
+                    <option value="180">Spider-Man: No Way Home - ₹180</option>
+                    <option value="220">Interstellar - ₹220</option>
+                    <option value="150">The Dark Knight - ₹150</option>
+                </select>
+            </div>
+
+
+            <div class="form-group">
+                <label for="showtime">Select Showtime</label>
+
+                <select id="showtime">
+                    <option>10:00 AM</option>
+                    <option>1:30 PM</option>
+                    <option>4:30 PM</option>
+                    <option>7:30 PM</option>
+                    <option>10:30 PM</option>
+                </select>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Seat Selection -->
+    <div class="card">
+
+        <h2 style="text-align:center;">Select Your Seats</h2>
+
+        <div class="screen">
+            SCREEN
+        </div>
+
+
+        <div class="seat-area">
+
+            <!-- Row A -->
+            <div class="seat-row">
+                <span class="row-label">A</span>
+
+                <div class="seat" onclick="selectSeat(this)">A1</div>
+                <div class="seat" onclick="selectSeat(this)">A2</div>
+                <div class="seat" onclick="selectSeat(this)">A3</div>
+                <div class="seat booked">A4</div>
+                <div class="seat booked">A5</div>
+
+                <div style="width:15px;"></div>
+
+                <div class="seat" onclick="selectSeat(this)">A6</div>
+                <div class="seat" onclick="selectSeat(this)">A7</div>
+                <div class="seat" onclick="selectSeat(this)">A8</div>
+                <div class="seat" onclick="selectSeat(this)">A9</div>
+                <div class="seat" onclick="selectSeat(this)">A10</div>
+            </div>
+
+
+            <!-- Row B -->
+            <div class="seat-row">
+                <span class="row-label">B</span>
+
+                <div class="seat" onclick="selectSeat(this)">B1</div>
+                <div class="seat" onclick="selectSeat(this)">B2</div>
+                <div class="seat booked">B3</div>
+                <div class="seat" onclick="selectSeat(this)">B4</div>
+                <div class="seat" onclick="selectSeat(this)">B5</div>
+
+                <div style="width:15px;"></div>
+
+                <div class="seat" onclick="selectSeat(this)">B6</div>
+                <div class="seat" onclick="selectSeat(this)">B7</div>
+                <div class="seat booked">B8</div>
+                <div class="seat" onclick="selectSeat(this)">B9</div>
+                <div class="seat" onclick="selectSeat(this)">B10</div>
+            </div>
+
+
+            <!-- Row C -->
+            <div class="seat-row">
+                <span class="row-label">C</span>
+
+                <div class="seat" onclick="selectSeat(this)">C1</div>
+                <div class="seat booked">C2</div>
+                <div class="seat" onclick="selectSeat(this)">C3</div>
+                <div class="seat" onclick="selectSeat(this)">C4</div>
+                <div class="seat" onclick="selectSeat(this)">C5</div>
+
+                <div style="width:15px;"></div>
+
+                <div class="seat" onclick="selectSeat(this)">C6</div>
+                <div class="seat" onclick="selectSeat(this)">C7</div>
+                <div class="seat" onclick="selectSeat(this)">C8</div>
+                <div class="seat booked">C9</div>
+                <div class="seat" onclick="selectSeat(this)">C10</div>
+            </div>
+
+
+            <!-- Row D -->
+            <div class="seat-row">
+                <span class="row-label">D</span>
+
+                <div class="seat booked">D1</div>
+                <div class="seat" onclick="selectSeat(this)">D2</div>
+                <div class="seat" onclick="selectSeat(this)">D3</div>
+                <div class="seat" onclick="selectSeat(this)">D4</div>
+                <div class="seat" onclick="selectSeat(this)">D5</div>
+
+                <div style="width:15px;"></div>
+
+                <div class="seat booked">D6</div>
+                <div class="seat" onclick="selectSeat(this)">D7</div>
+                <div class="seat" onclick="selectSeat(this)">D8</div>
+                <div class="seat" onclick="selectSeat(this)">D9</div>
+                <div class="seat" onclick="selectSeat(this)">D10</div>
+            </div>
+
+
+            <!-- Row E -->
+            <div class="seat-row">
+                <span class="row-label">E</span>
+
+                <div class="seat" onclick="selectSeat(this)">E1</div>
+                <div class="seat" onclick="selectSeat(this)">E2</div>
+                <div class="seat" onclick="selectSeat(this)">E3</div>
+                <div class="seat" onclick="selectSeat(this)">E4</div>
+                <div class="seat" onclick="selectSeat(this)">E5</div>
+
+                <div style="width:15px;"></div>
+
+                <div class="seat" onclick="selectSeat(this)">E6</div>
+                <div class="seat" onclick="selectSeat(this)">E7</div>
+                <div class="seat booked">E8</div>
+                <div class="seat" onclick="selectSeat(this)">E9</div>
+                <div class="seat" onclick="selectSeat(this)">E10</div>
+            </div>
+
+        </div>
+
+
+        <!-- Legend -->
+        <div class="legend">
+
+            <div class="legend-item">
+                <div class="legend-box available"></div>
+                Available
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-box selected-box"></div>
+                Selected
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-box booked-box"></div>
+                Booked
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Booking Summary -->
+    <div class="card">
+
+        <h2>Booking Summary</h2>
+
+        <div class="booking-summary">
+
+            <div class="summary-info">
+
+                <p>
+                    <strong>Movie:</strong>
+                    <span id="selectedMovie">Avengers: Endgame</span>
+                </p>
+
+                <p>
+                    <strong>Showtime:</strong>
+                    <span id="selectedTime">10:00 AM</span>
+                </p>
+
+                <p>
+                    <strong>Selected Seats:</strong>
+                    <span id="selectedSeats">None</span>
+                </p>
+
+                <p>
+                    <strong>Total Tickets:</strong>
+                    <span id="ticketCount">0</span>
+                </p>
+
+            </div>
+
+
+            <div style="text-align:center;">
+                <p>Total Amount</p>
+                <div class="price" id="totalPrice">₹0</div>
+            </div>
+
+        </div>
+
+
+        <button class="book-btn" onclick="bookTickets()">
+            🎟️ Confirm Booking
+        </button>
+
+
+        <div class="confirmation" id="confirmation">
+
+            <h2>✅ Booking Confirmed!</h2>
+
+            <p id="confirmationText"></p>
+
+            <p style="margin-top:10px;">
+                Enjoy your movie! 🍿
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <footer>
+        © 2026 Movie Seat Booking System
+    </footer>
+
+</div>
+
+
+<script>
+
+    let selectedSeats = [];
+
+    let ticketPrice = 200;
+
+
+    // Select / deselect seat
+    function selectSeat(seat) {
+
+        if (seat.classList.contains("booked")) {
+            return;
+        }
+
+        const seatNumber = seat.textContent;
+
+
+        if (seat.classList.contains("selected")) {
+
+            seat.classList.remove("selected");
+
+            selectedSeats =
+                selectedSeats.filter(
+                    seat => seat !== seatNumber
+                );
+
+        } else {
+
+            seat.classList.add("selected");
+
+            selectedSeats.push(seatNumber);
+        }
+
+
+        updateSummary();
+    }
+
+
+    // Update movie price
+    function updatePrice() {
+
+        const movie =
+            document.getElementById("movie");
+
+        ticketPrice =
+            parseInt(movie.value);
+
+
+        updateSummary();
+    }
+
+
+    // Update booking summary
+    function updateSummary() {
+
+        const movie =
+            document.getElementById("movie");
+
+        const showtime =
+            document.getElementById("showtime");
+
+
+        document.getElementById("selectedMovie")
+            .textContent =
+            movie.options[movie.selectedIndex].text
+                .split(" - ")[0];
+
+
+        document.getElementById("selectedTime")
+            .textContent =
+            showtime.value;
+
+
+        document.getElementById("selectedSeats")
+            .textContent =
+            selectedSeats.length > 0
+                ? selectedSeats.join(", ")
+                : "None";
+
+
+        document.getElementById("ticketCount")
+            .textContent =
+            selectedSeats.length;
+
+
+        document.getElementById("totalPrice")
+            .textContent =
+            "₹" + (selectedSeats.length * ticketPrice);
+    }
+
+
+    // Confirm booking
+    function bookTickets() {
+
+        if (selectedSeats.length === 0) {
+
+            alert("Please select at least one seat.");
+
+            return;
+        }
+
+
+        const movie =
+            document.getElementById("movie");
+
+        const showtime =
+            document.getElementById("showtime");
+
+
+        const movieName =
+            movie.options[movie.selectedIndex].text
+                .split(" - ")[0];
+
+
+        document.getElementById("confirmationText")
+            .textContent =
+            movieName +
+            " | " +
+            showtime.value +
+            " | Seats: " +
+            selectedSeats.join(", ") +
+            " | Total: ₹" +
+            (selectedSeats.length * ticketPrice);
+
+
+        document.getElementById("confirmation")
+            .style.display = "block";
+
+
+        // Convert selected seats to booked seats
+        document.querySelectorAll(".seat.selected")
+            .forEach(seat => {
+
+                seat.classList.remove("selected");
+
+                seat.classList.add("booked");
+
+                seat.onclick = null;
+            });
+
+
+        selectedSeats = [];
+
+        updateSummary();
+
+    }
+
+</script>
+
+</body>
+</html>
